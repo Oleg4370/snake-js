@@ -21,7 +21,7 @@
  */
 import { ELEMENT, COMMANDS, moveDirection, partsOfBody } from './constants';
 import {
-  isGameOver, getHeadPosition, getElementByXY
+    isGameOver, getHeadPosition, getElementByXY, getBoardAsArray, getDistanceBetween, sortByNearest
 } from './utils';
 
 // Bot Example
@@ -39,8 +39,8 @@ export function getNextSnakeMove(board, logger) {
     const sorround = getSorround(board, headPosition); // (LEFT, UP, RIGHT, DOWN)
     logger('Sorround: ' + JSON.stringify(sorround));
 
-    const forbiddenDirection = getForbiddenDirection(sorround);
-    getShortestWay(nearestElement);
+    console.log('headPosition', headPosition);
+    console.log('findAllPositionsOfElement', findAllPositionsOfElement(board, ELEMENT.APPLE, headPosition));
 
     const raitings = sorround.map(rateElement);
     logger('Raitings:' + JSON.stringify(raitings));
@@ -88,6 +88,8 @@ function getCommandByRaitings(raitings) {
     return indexToCommand[maxIndex];
 }
 
+/* My new code */
+
 function getSurroundInAllDirections(board, position, depth) {
     const p = position;
     return [
@@ -100,6 +102,24 @@ function getSurroundInAllDirections(board, position, depth) {
         getElementByXY(board, {x: p.x - depth, y: p.y + depth }), // LEFT DOWN
         getElementByXY(board, {x: p.x + depth, y: p.y + depth }), // LEFT DOWN
     ];
+}
+
+function findAllPositionsOfElement(board, element, headPosition) {
+    const boardArray = getBoardAsArray(board);
+    const elementPositions = [];
+
+    boardArray.forEach((item, i) => {
+        let startFrom = 0;
+        let x = item.indexOf(element, startFrom);
+
+        while (x !== -1) {
+            elementPositions.push({x, y: i});
+            startFrom = x;
+            x = item.indexOf(element, startFrom);
+        }
+    });
+
+    return sortByNearest(elementPositions, headPosition);
 }
 
 function  getNearestElement(board, headPosition, element) {
@@ -124,19 +144,10 @@ function predictImpasse() {
 
 }
 
-function getShortestWay({distance, direction}) {
+function getShortestWay(headPosition, elementPosition) {
+    // try direct way horizontal/vertical or vertical/horizontal
+    const xStep = headPosition.x > elementPosition.x ? -1 : 1;
+    const yStep = headPosition.y > elementPosition.y ? -1 : 1;
 
-}
-
-function getForbiddenDirection(nearElements){
-    // check in what way your snake are looking and opposite way will be forbidden
-    const forbiddenDirections = [];
-    console.log(nearElements, partsOfBody);
-
-    nearElements.forEach((item, i) => {
-        if (partsOfBody.includes(item)) {
-            forbiddenDirections.push(moveDirection[i]);
-        }
-    });
-    return forbiddenDirections;
+    //try horizontal/vertical
 }
