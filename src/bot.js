@@ -19,9 +19,16 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-import { ELEMENT, COMMANDS, moveDirection, partsOfBody } from './constants';
+import {ELEMENT, COMMANDS, moveDirection, partsOfBody, steps, positiveElements, arrayOfSteps} from './constants';
 import {
-    isGameOver, getHeadPosition, getElementByXY, getBoardAsArray, getDistanceBetween, sortByNearest
+    isGameOver,
+    getHeadPosition,
+    getElementByXY,
+    getBoardAsArray,
+    getDistanceBetween,
+    sortByNearest,
+    findAllPositionsOfElement,
+    getNextPoint, checkIfObjectIsInArray, countNegativeElementsInArray
 } from './utils';
 
 // Bot Example
@@ -34,21 +41,31 @@ export function getNextSnakeMove(board, logger) {
         return '';
     }
     logger('Head:' + JSON.stringify(headPosition));
-    const nearestElement = getNearestElement(board, headPosition, ELEMENT.APPLE);
 
-    const sorround = getSorround(board, headPosition); // (LEFT, UP, RIGHT, DOWN)
-    logger('Sorround: ' + JSON.stringify(sorround));
+    /* my code */
+    const nearestPositiveElements = findNearestPositionsOfElement(board, headPosition);
 
     console.log('headPosition', headPosition);
-    console.log('findAllPositionsOfElement', findAllPositionsOfElement(board, ELEMENT.APPLE, headPosition));
+    console.log('nearestPositiveElements', nearestPositiveElements);
+    for (let i = 0; i < nearestPositiveElements.length; i++) {
+        let nextStep = getShortestWay(board, headPosition, nearestPositiveElements[i]);
+        console.log('nextStep', nextStep);
+        if (nextStep) {
+            return nextStep;
+        }
+    }
+    /* ----------- */
 
-    const raitings = sorround.map(rateElement);
-    logger('Raitings:' + JSON.stringify(raitings));
+    const surround = getSurround(board, headPosition); // (LEFT, UP, RIGHT, DOWN)
+    logger('Surround: ' + JSON.stringify(surround));
 
-    return getCommandByRaitings(raitings);
+    const ratings = surround.map(rateElement);
+    logger('Ratings:' + JSON.stringify(ratings));
+
+    return getCommandByRatings(ratings);
 }
 
-function getSorround(board, position) {
+function getSurround(board, position) {
     const p = position;
     return [
         getElementByXY(board, {x: p.x - 1, y: p.y }), // LEFT
@@ -73,12 +90,12 @@ function rateElement(element) {
 }
 
 
-function getCommandByRaitings(raitings) {
+function getCommandByRatings(ratings) {
     var indexToCommand = ['LEFT', 'UP', 'RIGHT', 'DOWN'];
     var maxIndex = 0;
     var max = -Infinity;
-    for (var i = 0; i < raitings.length; i++) {
-        var r = raitings[i];
+    for (var i = 0; i < ratings.length; i++) {
+        var r = ratings[i];
         if (r > max) {
             maxIndex = i;
             max = r;
@@ -104,50 +121,146 @@ function getSurroundInAllDirections(board, position, depth) {
     ];
 }
 
-function findAllPositionsOfElement(board, element, headPosition) {
+function findNearestPositionsOfElement(board, headPosition) {
     const boardArray = getBoardAsArray(board);
     const elementPositions = [];
 
     boardArray.forEach((item, i) => {
         let startFrom = 0;
-        let x = item.indexOf(element, startFrom);
+        let x = findAllPositionsOfElement(item, startFrom);
 
         while (x !== -1) {
             elementPositions.push({x, y: i});
-            startFrom = x;
-            x = item.indexOf(element, startFrom);
+            startFrom = x + 1;
+            x = findAllPositionsOfElement(item, startFrom);
         }
     });
 
     return sortByNearest(elementPositions, headPosition);
 }
 
-function  getNearestElement(board, headPosition, element) {
-    let elementPositions = [];
-    let indexOfNeededElement = -1;
-    let startDepth = 0;
+function isInImpasse(board, elementPosition, headPosition) {
+    /* this function should check if given element is surrounded with walls,
+    * and that is why it`s unsafe to eat this element */
+    let surroundingElements = getSurround(board, elementPosition);
+    let indexOfNegativeElements = findAllPositionsInArray(surroundingElements);
+
+    if (indexOfNegativeElements.length === 2) {
+        const sumOfIndex = indexOfNegativeElements[0] + indexOfNegativeElements[1];
+        // if elements are not opposite, they not create impasse
+        if (sumOfIndex !== 2 && sumOfIndex !== 4) {
+            return false;
+        }
+
+        // TODO: there should be logic for recursing
+        const freeStepIndex= surroundingElements.indexOf(ELEMENT.NONE);
+        if (freeStepIndex > -1) {
+            const nextPointToCheck = getNextPoint(elementPosition, arrayOfSteps[freeStepIndex].shift);
+            return isInImpasse(board, nextPointToCheck);
+        }
+    }
+
+    return indexOfNegativeElements.length > 2;
+}
+
+function getShortestWay(board, headPosition, elementPosition) {
+    console.log('getShortestWay');
+    const route = [];
+
+    const xDistance = headPosition.x - elementPosition.x;
+    const yDistance = headPosition.y - elementPosition.y;
+    const xDirection = xDistance > 0 ? 'left' : xDistance < 0 ? 'right' : null;
+    const yDirection = yDistance > 0 ? 'up' : yDistance < 0 ? 'down' : null;
+
+    let currentPosition = {...headPosition};
+    let xTempDistance = xDirection;
+    let yTempDistance = yDirection;
+
+    let noShortestWay = false;
+    let bannedDirection = '';
+    const bannedDots = [];
+    let next = null;
 
     do {
-        startDepth += 1;
-        elementPositions = getSurroundInAllDirections(board, headPosition, startDepth);
-        indexOfNeededElement = elementPositions.indexOf(element);
-    } while(indexOfNeededElement === -1);
-    console.log('moveDirection',startDepth, elementPositions, moveDirection[indexOfNeededElement]);
+        /* check both direction or one that are not banned */
+        next = getNextByDirection(board,
+          bannedDots,
+          currentPosition,
+          bannedDirection !== xDirection && xTempDistance !== 0 && xDirection,
+          bannedDirection !== yDirection && yTempDistance !== 0 && yDirection
+        );
+
+        /* add next command to array or remove last one */
+        if (next.command) {
+            route.push(next.command);
+            bannedDirection = '';
+        } else {
+            bannedDirection = route.pop(); //add banned direction
+            if (next.object) {
+                bannedDots.push({...next.object});
+            }
+        }
+        if (next.object) {
+            currentPosition = next.object;
+            xTempDistance = currentPosition.x - elementPosition.x;
+            yTempDistance = currentPosition.y - elementPosition.y;
+        }
+
+        /* if there are no possible way to go */
+        if (route.length === 0) {
+            noShortestWay = true;
+        }
+
+    } while (getDistanceBetween(currentPosition, elementPosition) !== 0 && !noShortestWay);
+
+    console.log('getShortestWay -- route', route);
+    return route.length > 0 ? route[0] : null;
+}
+
+function getNextByDirection(board, arrayOfBannedPositions, currentPosition, direction1, direction2) {
+
+    if (direction1) {
+        let nextPoint = getNextPoint(currentPosition, steps[direction1].shift);
+        let nextElement = getElementByXY(board, nextPoint);
+
+        /* check if next dots are in banned array */
+        if (checkIfObjectIsInArray(arrayOfBannedPositions, nextPoint)) {
+            return {
+                object: null,
+                command: null
+            }
+        }
+
+        if (positiveElements.includes(nextElement)) {
+            return {
+                object: nextPoint,
+                command: steps[direction1].command
+            };
+        }
+    }
+
+    /* if first point are bad and there are second point, then we try it */
+    if (direction2) {
+        let nextPoint = getNextPoint(currentPosition, steps[direction2].shift);
+        let nextElement = getElementByXY(board, nextPoint);
+        /* check if next dots are in banned array */
+        if (checkIfObjectIsInArray(arrayOfBannedPositions, nextPoint)) {
+            return {
+                object: null,
+                command: null
+            }
+        }
+
+        if (positiveElements.includes(nextElement)) {
+            return {
+                object: nextPoint,
+                command: steps[direction2].command
+            };
+        }
+    }
+
     return {
-        distance: startDepth,
-        direction: moveDirection[indexOfNeededElement]
-    };
-}
-
-function predictImpasse() {
-    // this function should predict if after next move our snake will be surrounded with walls
-
-}
-
-function getShortestWay(headPosition, elementPosition) {
-    // try direct way horizontal/vertical or vertical/horizontal
-    const xStep = headPosition.x > elementPosition.x ? -1 : 1;
-    const yStep = headPosition.y > elementPosition.y ? -1 : 1;
-
-    //try horizontal/vertical
+        object: null,
+        command: null
+    }
 }

@@ -105,3 +105,106 @@ export const partsOfBody = [
     ELEMENT.BODY_RIGHT_UP,
     ELEMENT.BODY_VERTICAL
 ];
+
+export const steps = {
+    left: {
+        shift: {
+            x: -1,
+            y: 0
+        },
+        command: COMMANDS.LEFT
+    },
+    up: {
+        shift: {
+            x: 0,
+            y: -1
+        },
+        command: COMMANDS.UP
+    },
+    right: {
+        shift: {
+            x: 1,
+            y: 0
+        },
+        command: COMMANDS.RIGHT
+    },
+    down: {
+        shift: {
+            x: 0,
+            y: 1
+        },
+        command: COMMANDS.DOWN
+    }
+};
+
+export const arrayOfSteps = [
+    {
+        shift: {
+            x: -1,
+            y: 0
+        },
+        command: COMMANDS.LEFT
+    },
+    {
+        shift: {
+            x: 0,
+            y: -1
+        },
+        command: COMMANDS.UP
+    },
+    {
+        shift: {
+            x: 1,
+            y: 0
+        },
+        command: COMMANDS.RIGHT
+    },
+    {
+        shift: {
+            x: 0,
+            y: 1
+        },
+        command: COMMANDS.DOWN
+    }
+];
+
+const searchRegex = `[${ELEMENT.APPLE}\\${ELEMENT.GOLD}${ELEMENT.FURY_PILL}]`;
+export const regex = new RegExp(searchRegex,"g");
+
+export const positiveElements = [
+  ELEMENT.NONE,
+  ELEMENT.APPLE,
+  ELEMENT.GOLD,
+  ELEMENT.FURY_PILL
+];
+
+export const negativeElements = [
+    ELEMENT.WALL,
+    // противник
+    ELEMENT.ENEMY_HEAD_DOWN,
+    ELEMENT.ENEMY_HEAD_LEFT,
+    ELEMENT.ENEMY_HEAD_RIGHT,
+    ELEMENT.ENEMY_HEAD_UP,
+    ELEMENT.ENEMY_HEAD_DEAD,
+    ELEMENT.ENEMY_HEAD_EVIL,
+    ELEMENT.ENEMY_HEAD_FLY,
+    ELEMENT.ENEMY_HEAD_SLEEP,
+    ELEMENT.ENEMY_TAIL_END_DOWN,
+    ELEMENT.ENEMY_TAIL_END_LEFT,
+    ELEMENT.ENEMY_TAIL_END_UP,
+    ELEMENT.ENEMY_TAIL_END_RIGHT,
+    ELEMENT.ENEMY_TAIL_INACTIVE,
+    ELEMENT.ENEMY_BODY_HORIZONTAL,
+    ELEMENT.ENEMY_BODY_VERTICAL,
+    ELEMENT.ENEMY_BODY_LEFT_DOWN,
+    ELEMENT.ENEMY_BODY_LEFT_UP,
+    ELEMENT.ENEMY_BODY_RIGHT_DOWN,
+    ELEMENT.ENEMY_BODY_RIGHT_UP,
+    // my body
+    ELEMENT.BODY_HORIZONTAL,
+    ELEMENT.BODY_VERTICAL,
+    ELEMENT.BODY_LEFT_DOWN,
+    ELEMENT.BODY_LEFT_UP,
+    ELEMENT.BODY_RIGHT_DOWN,
+    ELEMENT.BODY_RIGHT_UP
+];

@@ -20,7 +20,7 @@
  * #L%
  */
 import {
-  ELEMENT
+    ELEMENT, negativeElements, regex
 } from './constants';
 
 // Here is utils that might help for bot development
@@ -122,8 +122,56 @@ export function getDistanceBetween(el1, el2) {
     return Math.abs(el1.x - el2.x) + Math.abs(el1.y - el2.y);
 }
 
+export function getNextPoint(head, next) {
+    return {
+        x: head.x + next.x,
+        y: head.y + next.y
+    }
+}
+
 export function sortByNearest(arrayOfPositions, headPosition) {
-    arrayOfPositions.sort((a, b) => {
+    return arrayOfPositions.sort((a, b) => {
         return getDistanceBetween(headPosition, a) - getDistanceBetween(headPosition, b);
     });
+}
+
+
+export function findAllPositionsOfElement(str, startFrom) {
+    const foundIndex = str.substring(startFrom).search(regex);
+    return foundIndex === -1 ? foundIndex : foundIndex + startFrom;
+}
+
+export function findAllPositionsInArray(arr, element) {
+    const indexes = [];
+    let startFrom = 0;
+    let currentIndex = -1;
+
+    do {
+        currentIndex = arr.indexOf(element, startFrom);
+        if (currentIndex > -1) {
+            indexes.push(currentIndex);
+        }
+        startFrom = currentIndex + 1;
+    } while (currentIndex !== -1);
+
+    return indexes;
+}
+
+function compareTwoDots(obj1, obj2) {
+    return (obj1.x === obj2.x) && (obj1.y === obj2.y);
+}
+
+export function checkIfObjectIsInArray(arrayOfODots, testDot) {
+    return arrayOfODots.some(item => {
+        return compareTwoDots(item, testDot);
+    })
+}
+
+export function countNegativeElementsInArray(arr) {
+    return arr.reduce((counter, item) => {
+        if (negativeElements.includes(item)) {
+            counter++;
+        }
+        return counter;
+    }, 0)
 }
