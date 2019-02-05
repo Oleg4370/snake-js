@@ -19,7 +19,16 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-import {ELEMENT, COMMANDS, moveDirection, partsOfBody, steps, positiveElements, arrayOfSteps} from './constants';
+import {
+    ELEMENT,
+    COMMANDS,
+    moveDirection,
+    partsOfBody,
+    steps,
+    positiveElements,
+    arrayOfSteps,
+    myBodyRegExp, regex, enemyRegExp
+} from './constants';
 import {
     isGameOver,
     getHeadPosition,
@@ -28,7 +37,12 @@ import {
     getDistanceBetween,
     sortByNearest,
     findAllPositionsOfElement,
-    getNextPoint, checkIfObjectIsInArray, countNegativeElementsInArray
+    getNextPoint,
+    checkIfObjectIsInArray,
+    countNegativeElementsInArray,
+    findAllPositionsInArray,
+    getNextDirection,
+    getAllEnemyHeadsAndPredictPoint
 } from './utils';
 
 // Bot Example
@@ -43,10 +57,38 @@ export function getNextSnakeMove(board, logger) {
     logger('Head:' + JSON.stringify(headPosition));
 
     /* my code */
-    const nearestPositiveElements = findNearestPositionsOfElement(board, headPosition);
 
+    if (getElementByXY(headPosition) === ELEMENT.HEAD_EVIL) {
+        /* way to nearest snakes */
+        const nearestSnakes = findNearestPositionsOfElement(board, headPosition, enemyRegExp);
+        for (let i = 0; i < nearestSnakes.length; i++) {
+            let nextStep = getShortestWay(board, headPosition, nearestSnakes[i]);
+            if (nextStep) {
+                return nextStep;
+            }
+        }
+    }
+
+    const mySize = getMySnakeSize(board);
     console.log('headPosition', headPosition);
-    console.log('nearestPositiveElements', nearestPositiveElements);
+    console.log('MySnakeSize', getMySnakeSize(board));
+
+    /* way to shortest snake */
+    if (mySize > 5) {
+        const predictHeadsPositions = findAllPredictsWayToAttak(board, mySize, headPosition);
+        if (predictHeadsPositions) {
+            for (let i = 0; i < predictHeadsPositions.length; i++) {
+                let nextStep = getShortestWay(board, headPosition, predictHeadsPositions[i]);
+                console.log('predictHeadsPositions -- nextStep', nextStep);
+                if (nextStep) {
+                    return nextStep;
+                }
+            }
+        }
+    }
+
+    /* way to positive elements */
+    const nearestPositiveElements = findNearestPositionsOfElement(board, headPosition, regex);
     for (let i = 0; i < nearestPositiveElements.length; i++) {
         let nextStep = getShortestWay(board, headPosition, nearestPositiveElements[i]);
         console.log('nextStep', nextStep);
@@ -107,43 +149,31 @@ function getCommandByRatings(ratings) {
 
 /* My new code */
 
-function getSurroundInAllDirections(board, position, depth) {
-    const p = position;
-    return [
-        getElementByXY(board, {x: p.x - depth, y: p.y }), // LEFT
-        getElementByXY(board, {x: p.x, y: p.y - depth }), // UP
-        getElementByXY(board, {x: p.x + depth, y: p.y}), // RIGHT
-        getElementByXY(board, {x: p.x, y: p.y + depth }), // DOWN
-        getElementByXY(board, {x: p.x - depth, y: p.y - depth }), // LEFT UP
-        getElementByXY(board, {x: p.x + depth, y: p.y - depth }), // RIGHT UP
-        getElementByXY(board, {x: p.x - depth, y: p.y + depth }), // LEFT DOWN
-        getElementByXY(board, {x: p.x + depth, y: p.y + depth }), // LEFT DOWN
-    ];
-}
-
-function findNearestPositionsOfElement(board, headPosition) {
+function findNearestPositionsOfElement(board, headPosition, regularExpression) {
     const boardArray = getBoardAsArray(board);
     const elementPositions = [];
 
     boardArray.forEach((item, i) => {
         let startFrom = 0;
-        let x = findAllPositionsOfElement(item, startFrom);
+        let x = findAllPositionsOfElement(item, startFrom, regularExpression);
 
         while (x !== -1) {
             elementPositions.push({x, y: i});
             startFrom = x + 1;
-            x = findAllPositionsOfElement(item, startFrom);
+            x = findAllPositionsOfElement(item, startFrom, regularExpression);
         }
     });
 
-    return sortByNearest(elementPositions, headPosition);
+    const elementsThatAreNotInImpasse = elementPositions.filter(item => !isInImpasse(board, item));
+
+    return sortByNearest(elementsThatAreNotInImpasse, headPosition);
 }
 
 function isInImpasse(board, elementPosition, headPosition) {
     /* this function should check if given element is surrounded with walls,
     * and that is why it`s unsafe to eat this element */
     let surroundingElements = getSurround(board, elementPosition);
-    let indexOfNegativeElements = findAllPositionsInArray(surroundingElements);
+    let indexOfNegativeElements = countNegativeElementsInArray(surroundingElements);
 
     if (indexOfNegativeElements.length === 2) {
         const sumOfIndex = indexOfNegativeElements[0] + indexOfNegativeElements[1];
@@ -153,18 +183,17 @@ function isInImpasse(board, elementPosition, headPosition) {
         }
 
         // TODO: there should be logic for recursing
-        const freeStepIndex= surroundingElements.indexOf(ELEMENT.NONE);
+        /*const freeStepIndex= surroundingElements.indexOf(ELEMENT.NONE);
         if (freeStepIndex > -1) {
             const nextPointToCheck = getNextPoint(elementPosition, arrayOfSteps[freeStepIndex].shift);
             return isInImpasse(board, nextPointToCheck);
-        }
+        }*/
     }
 
     return indexOfNegativeElements.length > 2;
 }
 
 function getShortestWay(board, headPosition, elementPosition) {
-    console.log('getShortestWay');
     const route = [];
 
     const xDistance = headPosition.x - elementPosition.x;
@@ -213,7 +242,6 @@ function getShortestWay(board, headPosition, elementPosition) {
 
     } while (getDistanceBetween(currentPosition, elementPosition) !== 0 && !noShortestWay);
 
-    console.log('getShortestWay -- route', route);
     return route.length > 0 ? route[0] : null;
 }
 
@@ -263,4 +291,74 @@ function getNextByDirection(board, arrayOfBannedPositions, currentPosition, dire
         object: null,
         command: null
     }
+}
+
+function getMySnakeSize(board) {
+    const myBodyLength = (board.match(myBodyRegExp) || []).length;
+    return myBodyLength + 2;
+}
+
+function getEnemySnakeSize(board, elementPosition, currentLength = 0, inputDirection) {
+    const elementSymbol = getElementByXY(board, elementPosition);
+    let nextInputDirection = null;
+
+    switch (elementSymbol) {
+        /* conditions for head */
+        case ELEMENT.ENEMY_HEAD_DOWN:
+            nextInputDirection = 'up';
+            break;
+        case ELEMENT.ENEMY_HEAD_UP:
+            nextInputDirection = 'down';
+            break;
+        case ELEMENT.ENEMY_HEAD_LEFT:
+            nextInputDirection = 'right';
+            break;
+        case ELEMENT.ENEMY_HEAD_RIGHT:
+            nextInputDirection = 'left';
+            break;
+
+      /* conditions for parts of body */
+        case ELEMENT.ENEMY_BODY_HORIZONTAL:
+        case ELEMENT.ENEMY_BODY_VERTICAL:
+            nextInputDirection = inputDirection;
+            break;
+        case ELEMENT.ENEMY_BODY_LEFT_DOWN:
+        case ELEMENT.ENEMY_BODY_LEFT_UP:
+        case ELEMENT.ENEMY_BODY_RIGHT_DOWN:
+        case ELEMENT.ENEMY_BODY_RIGHT_UP:
+            nextInputDirection = getNextDirection(elementSymbol, inputDirection);
+            break;
+
+      /* conditions for tail */
+        case ELEMENT.ENEMY_TAIL_END_DOWN:
+        case ELEMENT.ENEMY_TAIL_END_LEFT:
+        case ELEMENT.ENEMY_TAIL_END_UP:
+        case ELEMENT.ENEMY_TAIL_END_RIGHT:
+        case ELEMENT.ENEMY_TAIL_INACTIVE:
+            return currentLength++;
+    }
+
+    if (nextInputDirection) {
+        console.log(elementSymbol, nextInputDirection);
+        return getEnemySnakeSize(board,
+          getNextPoint(elementPosition, steps[nextInputDirection].shift),
+          currentLength++,
+          nextInputDirection);
+    }
+}
+
+function findAllPredictsWayToAttak(board, mySize, myPosition) {
+    const headsPositions = getAllEnemyHeadsAndPredictPoint(board);
+    if (headsPositions.length === 0) {
+        return null;
+    }
+    const weakerHeadsPositions = headsPositions.filter((item) => {
+        return getEnemySnakeSize(board, item.headPosition) < (mySize + 3);
+    });
+    if (weakerHeadsPositions.length === 0) {
+        return null;
+    }
+    const onlyPredictDots = weakerHeadsPositions.map(item => item.nextPoint);
+
+    return sortByNearest(onlyPredictDots, myPosition);
 }

@@ -79,7 +79,7 @@ export const ELEMENT = {
 };
 
 export const COMMANDS = {
-    UP: 'UP', // snake momves
+    UP: 'UP', // snake moves
     DOWN: 'DOWN',
     LEFT: 'LEFT',
     RIGHT: 'RIGHT',
@@ -208,3 +208,45 @@ export const negativeElements = [
     ELEMENT.BODY_RIGHT_DOWN,
     ELEMENT.BODY_RIGHT_UP
 ];
+
+const myBodySearchString = `[${partsOfBody.join('')}]`;
+export const myBodyRegExp = new RegExp(myBodySearchString,"g");
+
+export const enemyBodyDirection = {
+    [ELEMENT.ENEMY_BODY_HORIZONTAL]: ['left', 'right'],
+    [ELEMENT.ENEMY_BODY_VERTICAL]: ['up', 'down'],
+    [ELEMENT.ENEMY_BODY_LEFT_DOWN]: ['right', 'down'],
+    [ELEMENT.ENEMY_BODY_LEFT_UP]: ['right', 'up'],
+    [ELEMENT.ENEMY_BODY_RIGHT_DOWN]: ['left', 'down'],
+    [ELEMENT.ENEMY_BODY_RIGHT_UP]: ['left', 'up']
+};
+export const easyEnemyHeads = [
+    ELEMENT.ENEMY_HEAD_DOWN,
+    ELEMENT.ENEMY_HEAD_LEFT,
+    ELEMENT.ENEMY_HEAD_RIGHT,
+    ELEMENT.ENEMY_HEAD_UP,
+];
+
+export const enemy = [
+    ELEMENT.ENEMY_HEAD_DOWN,
+    ELEMENT.ENEMY_HEAD_LEFT,
+    ELEMENT.ENEMY_HEAD_RIGHT,
+    ELEMENT.ENEMY_HEAD_UP,
+    ELEMENT.ENEMY_HEAD_DEAD,
+    ELEMENT.ENEMY_HEAD_EVIL,
+    ELEMENT.ENEMY_HEAD_FLY,
+    ELEMENT.ENEMY_HEAD_SLEEP,
+    ELEMENT.ENEMY_TAIL_END_DOWN,
+    ELEMENT.ENEMY_TAIL_END_LEFT,
+    ELEMENT.ENEMY_TAIL_END_UP,
+    ELEMENT.ENEMY_TAIL_END_RIGHT,
+    ELEMENT.ENEMY_TAIL_INACTIVE,
+    ELEMENT.ENEMY_BODY_HORIZONTAL,
+    ELEMENT.ENEMY_BODY_VERTICAL,
+    ELEMENT.ENEMY_BODY_LEFT_DOWN,
+    ELEMENT.ENEMY_BODY_LEFT_UP,
+    ELEMENT.ENEMY_BODY_RIGHT_DOWN,
+    ELEMENT.ENEMY_BODY_RIGHT_UP,
+];
+const enemySearchString = `[${enemy.join('')}]`;
+export const enemyRegExp = new RegExp(enemySearchString,"g");

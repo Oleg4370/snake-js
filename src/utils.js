@@ -20,7 +20,8 @@
  * #L%
  */
 import {
-    ELEMENT, negativeElements, regex
+    easyEnemyHeads,
+    ELEMENT, enemyBodyDirection, negativeElements, regex, steps
 } from './constants';
 
 // Here is utils that might help for bot development
@@ -136,8 +137,8 @@ export function sortByNearest(arrayOfPositions, headPosition) {
 }
 
 
-export function findAllPositionsOfElement(str, startFrom) {
-    const foundIndex = str.substring(startFrom).search(regex);
+export function findAllPositionsOfElement(str, startFrom, elementsArray) {
+    const foundIndex = str.substring(startFrom).search(elementsArray);
     return foundIndex === -1 ? foundIndex : foundIndex + startFrom;
 }
 
@@ -174,4 +175,43 @@ export function countNegativeElementsInArray(arr) {
         }
         return counter;
     }, 0)
+}
+
+export function getNextDirection(bodyPart, inputDirection) {
+    const possibleDirections = enemyBodyDirection[bodyPart];
+
+    return possibleDirections.indexOf(inputDirection) === 0 ? possibleDirections[1] : possibleDirections[0];
+}
+
+export function getAllEnemyHeadsAndPredictPoint(board) {
+    const enemyHeadsArray = [];
+    let nextPoint = null;
+
+    for (var i = 0; i < easyEnemyHeads.length; i++) {
+        var position = board.indexOf(easyEnemyHeads[i]);
+
+        if (position !== -1) {
+            const headPosition = getXYByPosition(board, position);
+            switch (easyEnemyHeads[i]) {
+              /* conditions for head */
+                case ELEMENT.ENEMY_HEAD_DOWN:
+                    nextPoint = getNextPoint(headPosition, steps.down.shift);
+                    break;
+                case ELEMENT.ENEMY_HEAD_UP:
+                    nextPoint = getNextPoint(headPosition, steps.up.shift);
+                    break;
+                case ELEMENT.ENEMY_HEAD_LEFT:
+                    nextPoint = getNextPoint(headPosition, steps.left.shift);
+                    break;
+                case ELEMENT.ENEMY_HEAD_RIGHT:
+                    nextPoint = getNextPoint(headPosition, steps.right.shift);
+                    break;
+            }
+            enemyHeadsArray.push({
+                headPosition,
+                nextPoint
+            });
+        }
+    }
+    return enemyHeadsArray;
 }
