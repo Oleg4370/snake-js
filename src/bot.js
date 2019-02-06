@@ -58,12 +58,14 @@ export function getNextSnakeMove(board, logger) {
 
     /* my code */
 
-    if (getElementByXY(headPosition) === ELEMENT.HEAD_EVIL) {
+    if (getElementByXY(board, headPosition) === ELEMENT.HEAD_EVIL) {
+      console.log('HEAD_EVIL!!!!!!!!!!!!!!!!');
         /* way to nearest snakes */
-        const nearestSnakes = findNearestPositionsOfElement(board, headPosition, enemyRegExp);
+        const nearestSnakes = findNearestPositionsOfElement(board, headPosition, enemyRegExp, false);
         for (let i = 0; i < nearestSnakes.length; i++) {
             let nextStep = getShortestWay(board, headPosition, nearestSnakes[i]);
             if (nextStep) {
+              console.log('HEAD_EVIL -- nextStep!!!!!!!!!!!!!!!!!!!!!!');
                 return nextStep;
             }
         }
@@ -149,7 +151,7 @@ function getCommandByRatings(ratings) {
 
 /* My new code */
 
-function findNearestPositionsOfElement(board, headPosition, regularExpression) {
+function findNearestPositionsOfElement(board, headPosition, regularExpression, checkIfInImpasse = true) {
     const boardArray = getBoardAsArray(board);
     const elementPositions = [];
 
@@ -164,7 +166,7 @@ function findNearestPositionsOfElement(board, headPosition, regularExpression) {
         }
     });
 
-    const elementsThatAreNotInImpasse = elementPositions.filter(item => !isInImpasse(board, item));
+    const elementsThatAreNotInImpasse = checkIfInImpasse ? elementPositions.filter(item => !isInImpasse(board, item)) : elementPositions;
 
     return sortByNearest(elementsThatAreNotInImpasse, headPosition);
 }
