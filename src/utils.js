@@ -154,6 +154,12 @@ export function findAllPositionsOfElement(str, startFrom, elementsArray) {
     return foundIndex === -1 ? foundIndex : foundIndex + startFrom;
 }
 
+export function findAllPositions(board, element) {
+    return (board.match(element) || []).map(item => {
+        return getXYByPosition(board, item);
+    })
+}
+
 export function findAllPositionsInArray(arr, element) {
     const indexes = [];
     let startFrom = 0;
