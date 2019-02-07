@@ -21,7 +21,7 @@
  */
 import {
     easyEnemyHeads,
-    ELEMENT, enemyBodyDirection, negativeElements, regex, steps
+    ELEMENT, enemyBodyDirection, myBodyRegExp, negativeElements, regex, steps
 } from './constants';
 
 // Here is utils that might help for bot development
@@ -90,6 +90,14 @@ export function getHeadPosition(board) {
         ELEMENT.HEAD_SLEEP,
     ]);
 }
+export function getTailPosition(board) {
+    return getFirstPositionOf(board, [
+        ELEMENT.TAIL_END_DOWN,
+        ELEMENT.TAIL_END_LEFT,
+        ELEMENT.TAIL_END_UP,
+        ELEMENT.TAIL_END_RIGHT,
+    ]);
+}
 
 export function getFirstPositionOf(board, elements) {
     for (var i = 0; i < elements.length; i++) {
@@ -130,10 +138,14 @@ export function getNextPoint(head, next) {
     }
 }
 
-export function sortByNearest(arrayOfPositions, headPosition) {
-    return arrayOfPositions.sort((a, b) => {
+export function sortByNearest(arrayOfPositions, headPosition, priorityElements) {
+    const sortedArray = arrayOfPositions.sort((a, b) => {
         return getDistanceBetween(headPosition, a) - getDistanceBetween(headPosition, b);
     });
+    if (priorityElements) {
+        return priorityElements.concat(sortedArray);
+    }
+    return sortedArray;
 }
 
 
@@ -179,8 +191,21 @@ export function countNegativeElementsInArray(arr) {
 
 export function getNextDirection(bodyPart, inputDirection) {
     const possibleDirections = enemyBodyDirection[bodyPart];
+    let reverseInputDirection = inputDirection;
 
-    return possibleDirections.indexOf(inputDirection) === 0 ? possibleDirections[1] : possibleDirections[0];
+    const horizontalWays = ['left', 'right'];
+    const horizontalIndex = horizontalWays.indexOf(inputDirection);
+    if (horizontalIndex > -1) {
+        reverseInputDirection = horizontalIndex === 1 ? horizontalWays[0] : horizontalWays[1];
+    }
+
+    const verticalWays = ['up', 'down'];
+    const verticalIndex = verticalWays.indexOf(inputDirection);
+    if (verticalIndex > -1) {
+        reverseInputDirection = horizontalIndex === 1 ? verticalWays[0] : verticalWays[1];
+    }
+
+    return possibleDirections.indexOf(reverseInputDirection) === 0 ? possibleDirections[1] : possibleDirections[0];
 }
 
 export function getAllEnemyHeadsAndPredictPoint(board) {
@@ -214,4 +239,10 @@ export function getAllEnemyHeadsAndPredictPoint(board) {
         }
     }
     return enemyHeadsArray;
+}
+
+export function getAllEvilPoints(board) {
+    (board.match(ELEMENT.FURY_PILL) || []).map(item => {
+        return getXYByPosition(board, item);
+    })
 }

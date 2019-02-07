@@ -27,7 +27,7 @@ import {
     steps,
     positiveElements,
     arrayOfSteps,
-    myBodyRegExp, regex, enemyRegExp
+    myBodyRegExp, regex, enemyRegExp, regexWitStone, positiveElementsWithStone, enemyFull, positiveElementsForEvilSnake
 } from './constants';
 import {
     isGameOver,
@@ -42,9 +42,10 @@ import {
     countNegativeElementsInArray,
     findAllPositionsInArray,
     getNextDirection,
-    getAllEnemyHeadsAndPredictPoint
+    getAllEnemyHeadsAndPredictPoint, getAllEvilPoints, getTailPosition
 } from './utils';
 
+let positiveEl = positiveElements;
 // Bot Example
 export function getNextSnakeMove(board, logger) {
     if (isGameOver(board)) {
@@ -57,21 +58,42 @@ export function getNextSnakeMove(board, logger) {
     logger('Head:' + JSON.stringify(headPosition));
 
     /* my code */
+    let attackCommand = null;
+    const headElement = getElementByXY(board, headPosition);
+    const tailPosition = getTailPosition(board);
+    if (tailPosition) {
+        const nearTail = getSurround(board, tailPosition);
 
-    if (getElementByXY(board, headPosition) === ELEMENT.HEAD_EVIL) {
+        nearTail.forEach((item) => {
+            if (enemyFull.indexOf(item) > -1) {
+                attackCommand = ', ACT';
+            }
+        });
+    }
+
+
+    const mySize = getMySnakeSize(board);
+    if (mySize > 5) {
+        positiveEl = positiveElementsWithStone;
+    } else {
+        positiveEl = positiveElements;
+    }
+
+    /* way to nearest snakes if HEAD_EVIL */
+    if (headElement === ELEMENT.HEAD_EVIL) {
       console.log('HEAD_EVIL!!!!!!!!!!!!!!!!');
-        /* way to nearest snakes */
+        positiveEl = positiveElementsForEvilSnake;
         const nearestSnakes = findNearestPositionsOfElement(board, headPosition, enemyRegExp, false);
+        console.log('nearestSnakes!!!!!!!', nearestSnakes);
         for (let i = 0; i < nearestSnakes.length; i++) {
             let nextStep = getShortestWay(board, headPosition, nearestSnakes[i]);
+            console.log('HEAD_EVIL -- nextStep', nextStep);
             if (nextStep) {
-              console.log('HEAD_EVIL -- nextStep!!!!!!!!!!!!!!!!!!!!!!');
-                return nextStep;
+              console.log('HEAD_EVIL -- nextStep!!!!!!!!!!!!!!!!!!!!!!', nextStep);
+                return attackCommand ? nextStep + attackCommand : nextStep;
             }
         }
     }
-
-    const mySize = getMySnakeSize(board);
     console.log('headPosition', headPosition);
     console.log('MySnakeSize', getMySnakeSize(board));
 
@@ -83,19 +105,19 @@ export function getNextSnakeMove(board, logger) {
                 let nextStep = getShortestWay(board, headPosition, predictHeadsPositions[i]);
                 console.log('predictHeadsPositions -- nextStep', nextStep);
                 if (nextStep) {
-                    return nextStep;
+                    return attackCommand ? nextStep + attackCommand : nextStep;
                 }
             }
         }
     }
 
     /* way to positive elements */
-    const nearestPositiveElements = findNearestPositionsOfElement(board, headPosition, regex);
+    const nearestPositiveElements = (mySize < 5) ? findNearestPositionsOfElement(board, headPosition, regex) : findNearestPositionsOfElement(board, headPosition, regexWitStone);
     for (let i = 0; i < nearestPositiveElements.length; i++) {
         let nextStep = getShortestWay(board, headPosition, nearestPositiveElements[i]);
         console.log('nextStep', nextStep);
         if (nextStep) {
-            return nextStep;
+            return attackCommand ? nextStep + attackCommand : nextStep;
         }
     }
     /* ----------- */
@@ -166,9 +188,11 @@ function findNearestPositionsOfElement(board, headPosition, regularExpression, c
         }
     });
 
-    const elementsThatAreNotInImpasse = checkIfInImpasse ? elementPositions.filter(item => !isInImpasse(board, item)) : elementPositions;
+    if (checkIfInImpasse) {
+        return sortByNearest(elementPositions.filter(item => !isInImpasse(board, item)), headPosition, getAllEvilPoints(board));
+    }
 
-    return sortByNearest(elementsThatAreNotInImpasse, headPosition);
+    return sortByNearest(elementPositions, headPosition);
 }
 
 function isInImpasse(board, elementPosition, headPosition) {
@@ -261,7 +285,7 @@ function getNextByDirection(board, arrayOfBannedPositions, currentPosition, dire
             }
         }
 
-        if (positiveElements.includes(nextElement)) {
+        if (positiveEl.includes(nextElement)) {
             return {
                 object: nextPoint,
                 command: steps[direction1].command
@@ -281,7 +305,7 @@ function getNextByDirection(board, arrayOfBannedPositions, currentPosition, dire
             }
         }
 
-        if (positiveElements.includes(nextElement)) {
+        if (positiveEl.includes(nextElement)) {
             return {
                 object: nextPoint,
                 command: steps[direction2].command
@@ -341,7 +365,6 @@ function getEnemySnakeSize(board, elementPosition, currentLength = 0, inputDirec
     }
 
     if (nextInputDirection) {
-        console.log(elementSymbol, nextInputDirection);
         return getEnemySnakeSize(board,
           getNextPoint(elementPosition, steps[nextInputDirection].shift),
           currentLength++,
@@ -362,5 +385,5 @@ function findAllPredictsWayToAttak(board, mySize, myPosition) {
     }
     const onlyPredictDots = weakerHeadsPositions.map(item => item.nextPoint);
 
-    return sortByNearest(onlyPredictDots, myPosition);
+    return sortByNearest(onlyPredictDots, myPosition, getAllEvilPoints(board));
 }

@@ -171,11 +171,50 @@ export const arrayOfSteps = [
 const searchRegex = `[${ELEMENT.APPLE}\\${ELEMENT.GOLD}${ELEMENT.FURY_PILL}]`;
 export const regex = new RegExp(searchRegex,"g");
 
+const searchRegexWitStone = `[${ELEMENT.APPLE}\\${ELEMENT.GOLD}${ELEMENT.FURY_PILL}\\${ELEMENT.STONE}]`;
+export const regexWitStone = new RegExp(searchRegexWitStone,"g");
+
 export const positiveElements = [
   ELEMENT.NONE,
   ELEMENT.APPLE,
   ELEMENT.GOLD,
   ELEMENT.FURY_PILL
+];
+
+export const positiveElementsWithStone = [
+    ELEMENT.NONE,
+    ELEMENT.APPLE,
+    ELEMENT.GOLD,
+    ELEMENT.FURY_PILL,
+    ELEMENT.STONE
+];
+
+export const positiveElementsForEvilSnake = [
+    ELEMENT.NONE,
+    ELEMENT.APPLE,
+    ELEMENT.GOLD,
+    ELEMENT.FURY_PILL,
+    ELEMENT.STONE,
+    // противник
+    ELEMENT.ENEMY_HEAD_DOWN,
+    ELEMENT.ENEMY_HEAD_LEFT,
+    ELEMENT.ENEMY_HEAD_RIGHT,
+    ELEMENT.ENEMY_HEAD_UP,
+    ELEMENT.ENEMY_HEAD_DEAD,
+    ELEMENT.ENEMY_HEAD_EVIL,
+    ELEMENT.ENEMY_HEAD_FLY,
+    ELEMENT.ENEMY_HEAD_SLEEP,
+    ELEMENT.ENEMY_TAIL_END_DOWN,
+    ELEMENT.ENEMY_TAIL_END_LEFT,
+    ELEMENT.ENEMY_TAIL_END_UP,
+    ELEMENT.ENEMY_TAIL_END_RIGHT,
+    ELEMENT.ENEMY_TAIL_INACTIVE,
+    ELEMENT.ENEMY_BODY_HORIZONTAL,
+    ELEMENT.ENEMY_BODY_VERTICAL,
+    ELEMENT.ENEMY_BODY_LEFT_DOWN,
+    ELEMENT.ENEMY_BODY_LEFT_UP,
+    ELEMENT.ENEMY_BODY_RIGHT_DOWN,
+    ELEMENT.ENEMY_BODY_RIGHT_UP
 ];
 
 export const negativeElements = [
@@ -213,12 +252,10 @@ const myBodySearchString = `[${partsOfBody.join('')}]`;
 export const myBodyRegExp = new RegExp(myBodySearchString,"g");
 
 export const enemyBodyDirection = {
-    [ELEMENT.ENEMY_BODY_HORIZONTAL]: ['left', 'right'],
-    [ELEMENT.ENEMY_BODY_VERTICAL]: ['up', 'down'],
-    [ELEMENT.ENEMY_BODY_LEFT_DOWN]: ['right', 'down'],
-    [ELEMENT.ENEMY_BODY_LEFT_UP]: ['right', 'up'],
-    [ELEMENT.ENEMY_BODY_RIGHT_DOWN]: ['left', 'down'],
-    [ELEMENT.ENEMY_BODY_RIGHT_UP]: ['left', 'up']
+    [ELEMENT.ENEMY_BODY_LEFT_DOWN]: ['left', 'down'], // ┐
+    [ELEMENT.ENEMY_BODY_LEFT_UP]: ['left', 'up'], // ┘
+    [ELEMENT.ENEMY_BODY_RIGHT_DOWN]: ['right', 'down'], //┌
+    [ELEMENT.ENEMY_BODY_RIGHT_UP]: ['right', 'up'] // └
 };
 export const easyEnemyHeads = [
     ELEMENT.ENEMY_HEAD_DOWN,
@@ -231,10 +268,6 @@ export const enemy = [
     ELEMENT.ENEMY_HEAD_DOWN,
     ELEMENT.ENEMY_HEAD_LEFT,
     ELEMENT.ENEMY_HEAD_RIGHT,
-    ELEMENT.ENEMY_HEAD_DEAD,
-    ELEMENT.ENEMY_HEAD_EVIL,
-    ELEMENT.ENEMY_HEAD_FLY,
-    ELEMENT.ENEMY_HEAD_SLEEP,
     ELEMENT.ENEMY_TAIL_END_DOWN,
     ELEMENT.ENEMY_TAIL_END_LEFT,
     ELEMENT.ENEMY_TAIL_END_UP,
@@ -247,3 +280,20 @@ export const enemy = [
 ];
 const enemySearchString = `[${enemy.join('')}\\${ELEMENT.ENEMY_HEAD_UP}\\${ELEMENT.ENEMY_BODY_VERTICAL}]`;
 export const enemyRegExp = new RegExp(enemySearchString,"g");
+
+export const enemyFull = [
+    ELEMENT.ENEMY_HEAD_DOWN,
+    ELEMENT.ENEMY_HEAD_LEFT,
+    ELEMENT.ENEMY_HEAD_RIGHT,
+    ELEMENT.ENEMY_TAIL_END_DOWN,
+    ELEMENT.ENEMY_TAIL_END_LEFT,
+    ELEMENT.ENEMY_TAIL_END_UP,
+    ELEMENT.ENEMY_TAIL_END_RIGHT,
+    ELEMENT.ENEMY_BODY_HORIZONTAL,
+    ELEMENT.ENEMY_BODY_LEFT_DOWN,
+    ELEMENT.ENEMY_BODY_LEFT_UP,
+    ELEMENT.ENEMY_BODY_RIGHT_DOWN,
+    ELEMENT.ENEMY_BODY_RIGHT_UP,
+    ELEMENT.ENEMY_HEAD_UP,
+    ELEMENT.ENEMY_BODY_VERTICAL
+];
