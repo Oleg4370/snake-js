@@ -20,14 +20,21 @@
  * #L%
  */
 import {
-    ELEMENT,
-    COMMANDS,
-    moveDirection,
-    partsOfBody,
-    steps,
-    positiveElements,
-    arrayOfSteps,
-    myBodyRegExp, regex, enemyRegExp, regexWitStone, positiveElementsWithStone, enemyFull, positiveElementsForEvilSnake
+  ELEMENT,
+  COMMANDS,
+  moveDirection,
+  partsOfBody,
+  steps,
+  positiveElements,
+  arrayOfSteps,
+  myBodyRegExp,
+  regex,
+  enemyRegExp,
+  regexWitStone,
+  positiveElementsWithStone,
+  enemyFull,
+  positiveElementsForEvilSnake,
+  negativeElements
 } from './constants';
 import {
     isGameOver,
@@ -203,12 +210,12 @@ function isInImpasse(board, elementPosition, headPosition) {
     /* this function should check if given element is surrounded with walls,
     * and that is why it`s unsafe to eat this element */
     let surroundingElements = getSurround(board, elementPosition);
-    let indexOfNegativeElements = countNegativeElementsInArray(surroundingElements);
+    let sumOfNegativeEl = countNegativeElementsInArray(surroundingElements);
 
-    if (indexOfNegativeElements.length === 2) {
-        const sumOfIndex = indexOfNegativeElements[0] + indexOfNegativeElements[1];
-        // if elements are not opposite, they not create impasse
-        if (sumOfIndex !== 2 && sumOfIndex !== 4) {
+    if (surroundingElements.length === 2) {
+      const twoFirst = negativeElements.includes(surroundingElements[0]) && negativeElements.includes(surroundingElements[1]);
+      const twoLast = negativeElements.includes(surroundingElements[2]) && negativeElements.includes(surroundingElements[3]);
+        if (twoFirst || twoLast) {
             return false;
         }
 
@@ -220,7 +227,7 @@ function isInImpasse(board, elementPosition, headPosition) {
         }*/
     }
 
-    return indexOfNegativeElements.length > 2;
+    return sumOfNegativeEl > 2;
 }
 
 function getShortestWay(board, headPosition, elementPosition) {
